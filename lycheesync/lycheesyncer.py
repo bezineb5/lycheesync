@@ -130,6 +130,38 @@ class LycheeSyncer:
         return destimage
 
 
+    def adjustImageRotation(self, img):
+        """
+        Rotates photos according to the exif orientaion tag
+        Returns nothing DOIT BEFORE THUMBNAILS !!!
+        """
+
+        if "exif" not in img.info:
+            return
+        exif_dict = piexif.load(img.info["exif"])
+
+        if piexif.ImageIFD.Orientation in exif_dict["0th"]:
+            orientation = exif_dict["0th"][piexif.ImageIFD.Orientation]
+
+            if orientation == 2:
+                img = img.transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 3:
+                img = img.rotate(180)
+            elif orientation == 4:
+                img = img.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 5:
+                img = img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 6:
+                img = img.rotate(-90, expand=True)
+            elif orientation == 7:
+                img = img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 8:
+                img = img.rotate(90, expand=True)
+            else:
+                if orientation != 1:
+                    logger.warn("Orientation not defined {} for photo {}".format(orientation, photo.title))
+
+
     def makeFastThumbnail(self, photo):
         """
         Make the 2 thumbnails needed by Lychee for a given photo
@@ -170,6 +202,7 @@ class LycheeSyncer:
                 right = x
 
         img = img.resize(sizes[1], Image.BICUBIC, (left, upper, right, lower))
+        self.adjustImageRotation(img)
         #img.thumbnail(sizes[1])
         img.save(destimage1, quality=60)
         img.thumbnail(sizes[0])
