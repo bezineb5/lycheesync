@@ -1,13 +1,8 @@
 
 from setuptools import setup, find_packages
 
-from pip.download import PipSession
-from pip.req import parse_requirements
-
-reqs = [
-    str(r.req) for r in
-    parse_requirements('requirements.txt', session=PipSession())]
-
+with open('requirements.txt') as f:
+    reqs = f.read().strip().split('\n')
 
 setup(
     name="lycheesync",
